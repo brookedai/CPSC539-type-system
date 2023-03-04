@@ -94,7 +94,7 @@ G ::=                   contexts:
     (check-equal? (type-check val-false) 'Bool "false")
     (check-equal? (type-check val-fn-identity) '(Bool -> Bool) "identity")
     (check-equal? (type-check term-app-identity) 'Bool "app identity")
-    (check-equal? (type-check val-fn-double) '((Bool -> Bool) -> (Bool -> Bool)))
+    (check-equal? (type-check val-fn-double) '((Bool -> Bool) -> (Bool -> Bool)) "double")
   ))
 
 (run-tests file-tests)
