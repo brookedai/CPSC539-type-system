@@ -6,26 +6,26 @@
 
 #|
 t ::=                   terms:
-  x                 variable
-  (lambda x T t)    abstraction
-  (t t)             application
+  x                     variable
+  (lambda x T t)        abstraction
+  (t t)                 application
 v ::=                   values:
-  True
-  False
-  (lambda x T t)    abstraction value
+  true | false          boolean constants
+  (lambda x T t)        abstraction value
 T ::=                   types:
-  Bool              boolean
-  T -> T            type of functions
+  Bool                  boolean
+  T -> T                type of functions
 G ::=                   contexts:
-  ()                empty context
-  ()            term variable binding
+  '()                   empty context
+  (dict-set G x T)      term variable binding
 |#
 
 ;; Program examples
 (define val-true 'true)
 (define val-false 'false)
-(define val-identity '(lambda x Bool x))
-(define app-identity `(,val-identity ,val-false))
+(define val-fn-identity '(lambda x Bool x))
+(define term-app-identity `(,val-fn-identity ,val-false))
+(define val-fn-double '(lambda f (Bool -> Bool) (lambda x Bool (f (f x)))))
 
 ;; Context examples
 (define empty-gamma #hash())
@@ -61,7 +61,7 @@ G ::=                   contexts:
             (dict-ref G x)
             (error 'type-check "key not found: ~a" x))]))
 
-  ;; sexpr dict -> (sexpr dict)
+  ;; sexpr dict -> sexpr
   (define (type-check-t t G)
     (match t
       [`(lambda ,x ,T ,body)
@@ -74,7 +74,7 @@ G ::=                   contexts:
         (match T-t1
           [`(,T-x -> ,T-body)
            (if (eq? T-x T-t2)
-             `(,T-t1 ,T-t2)
+             T-body
              (error 'type-check-t "type mismatch: ~a =/= ~a" T-t1 T-t2))]
           [_ (error 'type-check-t "invalid type for application t1: ~a" T-t1)]))]
 
@@ -92,8 +92,10 @@ G ::=                   contexts:
   (test-suite "tests for STLC with Bool"
     (check-equal? (type-check val-true) 'Bool "true")
     (check-equal? (type-check val-false) 'Bool "false")
-    (check-equal? (type-check val-identity) '(Bool -> Bool) "identity")
-    (check-equal? (type-check app-identity) '((Bool -> Bool) Bool) "app identity")
+    (check-equal? (type-check val-fn-identity) '(Bool -> Bool) "identity")
+    (check-equal? (type-check term-app-identity) 'Bool "app identity")
+    (check-equal? (type-check val-fn-double) '((Bool -> Bool) -> (Bool -> Bool)))
   ))
 
 (run-tests file-tests)
+;; TODO type equality
