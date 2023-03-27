@@ -32,7 +32,9 @@
 ;; Template
 ; (define (fn-for-type t)
 ;   (cond [(bool? t) (... t)]
-;         [(fun? s)  (... (fn-for-type (fun-param s))
-;                         (fn-for-type (fun-body s)))])
+;         [(fun? t)  (... (fn-for-type (fun-param t))
+;                         (fn-for-type (fun-body t)))])
 
-
+;; Helpers
+(define (primitive-val? v)
+  (boolean? v))

@@ -64,7 +64,7 @@
 
 ;; Tests
 (define file-tests
-  (test-suite "tests for STLC with Bool"
+  (test-suite "parser tests for SLTLC"
     (check-equal? (parse val-true) #t "true")
     (check-equal? (parse val-false) #f "false")
     (check-equal? (parse val-fn-identity) (lam 'x (bool) (id 'x)) "identity")

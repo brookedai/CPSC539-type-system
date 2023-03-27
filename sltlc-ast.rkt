@@ -4,12 +4,7 @@
 (require racket
          racket/struct)
 (require "sltlc-types.rkt")
-(provide 
-  sltlc
-  id
-  lam
-  app
-)
+(provide (all-defined-out))
 
 (struct sltlc ())
 (struct id (name)
