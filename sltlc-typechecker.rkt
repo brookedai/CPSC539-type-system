@@ -5,6 +5,8 @@
          rackunit/text-ui)
 (require "sltlc-ast.rkt"
          "sltlc-types.rkt")
+(provide typecheck
+         typecheck-tests)
 
 ;; SLTLC AST examples
 (define val-true #t)
@@ -42,7 +44,7 @@
   (typecheck-sltlc p '()))
 
   ;; Tests
-(define file-tests
+(define typecheck-tests
   (test-suite "typechecker tests for SLTLC"
     (check-equal? (typecheck val-true) (bool) "true")
     (check-equal? (typecheck val-false) (bool) "false")
@@ -51,4 +53,4 @@
     (check-equal? (typecheck val-fn-double) (fun (fun (bool) (bool)) (fun (bool) (bool))) "double")
   ))
 
-(run-tests file-tests)
+; (run-tests typecheck-tests)

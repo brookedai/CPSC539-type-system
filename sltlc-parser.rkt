@@ -5,6 +5,8 @@
          rackunit/text-ui)
 (require "sltlc-ast.rkt"
          "sltlc-types.rkt")
+(provide parse
+         parse-tests)
 
 ;; Program examples
 (define val-true 'true)
@@ -63,7 +65,7 @@
 
 
 ;; Tests
-(define file-tests
+(define parse-tests
   (test-suite "parser tests for SLTLC"
     (check-equal? (parse val-true) #t "true")
     (check-equal? (parse val-false) #f "false")
@@ -76,4 +78,4 @@
                   "double")
   ))
 
-(run-tests file-tests)
+; (run-tests parse-tests)
