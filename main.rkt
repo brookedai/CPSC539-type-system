@@ -9,17 +9,18 @@
 #|
 SIMPLE LIQUID-TYPED LAMBDA CALCULUS (SLTLC)
 Surface syntax
-
 t ::=                   terms:
   x                     variable
-  (lambda x T t)        abstraction
+  (lambda x . t)        abstraction
   (t t)                 application
 v ::=                   values:
   true | false          boolean constants
-  (lambda x T t)        abstraction value
+  (lambda x . t)        abstraction value
 T ::=                   types:
   Bool                  boolean
   T -> T                type of functions
+
+Context
 G ::=                   contexts:
   '()                   empty context
   (dict-set G x T)      term variable binding
