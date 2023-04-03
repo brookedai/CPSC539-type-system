@@ -8,24 +8,39 @@
          "sltlc-inference.rkt"
          "util.rkt")
 (provide typecheck
-         typecheck-tests)
+         typecheck-tests
+         ast-val-true
+         ast-val-false
+         ast-val-fn-identity
+         ast-term-app-identity
+         ast-val-fn-double
+         ast-val-22-5-5
+         ast-val-zero
+         ast-term-succ
+         ast-term-pred)
 
 ;; SLTLC AST examples
-(define val-true #t)
-(define val-false #f)
-(define val-fn-identity (lam 'x (type-var 'T1) (id 'x)))
-(define term-app-identity (app val-fn-identity val-false))
-(define val-fn-double (lam 'f (type-var 'T2)
-                        (lam 'x (type-var 'T3)
-                          (app (id 'f) (app (id 'f) (id 'x))))))
-(define val-22-5-5 (lam 'z (type-var 'T4) 
-                     (lam 'y (type-var 'T5) 
-                       (app (id 'z) (app (id 'y) #t)))))
-(define term-app-double (app (app val-fn-double val-fn-identity) #t))
+(define ast-val-true #t)
+(define ast-val-false #f)
+(define ast-val-fn-identity (lam 'x (type-var 'T1) (id 'x)))
+(define ast-term-app-identity (app ast-val-fn-identity ast-val-false))
+(define ast-val-fn-double (lam 'f (type-var 'T2)
+                            (lam 'x (type-var 'T3)
+                              (app (id 'f) (app (id 'f) (id 'x))))))
+(define ast-val-22-5-5 (lam 'z (type-var 'T4) 
+                        (lam 'y (type-var 'T5) 
+                          (app (id 'z) (app (id 'y) #t)))))
+(define ast-term-app-double (app (app ast-val-fn-double ast-val-fn-identity) #t))
+(define ast-val-zero 0)
+(define ast-term-succ (succ 0))
+(define ast-term-pred (pred 0))
+(define ast-term-iszero (iszero 0))
+(define ast-term-if (if-conditional #t 1 0))
 
 ;; Helpers
 (define (primitive-type v)
   (cond [(boolean? v) (bool)]
+        [(integer? v) (int)]
         [else (error 'primitive-type "invalid primitive value ~a" v)]))
 
 (define (typechecker-fresh-type-var)
@@ -39,26 +54,58 @@
   ;; Chi: set of type vars in context
   ;; Constraints: list of constraints for type variables
   (define (gather-constraints-s s G X C)
-    (cond [(id? s) (if (dict-has-key? G (id-name s))
-                       (values (dict-ref G (id-name s)) X C)
-                       (error 'gather-constraints-s "key not found: ~a" s))]
-          [(lam? s) 
-           (let-values ([(t-body X-body C-body) 
-                         (gather-constraints-s (lam-body s) 
-                                               (dict-set G (lam-param s) 
-                                                           (lam-param-type s))
-                                               X C)])
-            (values (fun (lam-param-type s) t-body) X-body C-body))]
-          [(app? s)
-            ; assume that X-fun and X-arg do not share elements
-            ; TODO add an assertion
-            (let*-values ([(t-fun X-fun C-fun) (gather-constraints-s (app-fn s) G X C)]
-                          [(t-arg X-arg C-arg) (gather-constraints-s (app-arg s) G X C)]
-                          [(t-app) (type-var (typechecker-fresh-type-var))])
-              (values t-app
-                      (set-union X-fun X-arg)
-                      (append (list (constraint t-fun (fun t-arg t-app))) C-fun C-arg)))]
-          [(primitive-val? s) (values (primitive-type s) X C)]))
+    (cond 
+      [(id? s) (if (dict-has-key? G (id-name s))
+                   (values (dict-ref G (id-name s)) X C)
+                   (error 'gather-constraints-s "key not found: ~a" s))]
+
+      [(lam? s) 
+        (let-values ([(t-body X-body C-body) 
+                      (gather-constraints-s (lam-body s) 
+                                            (dict-set G (lam-param s) 
+                                                        (lam-param-type s))
+                                            X C)])
+        (values (fun (lam-param-type s) t-body) X-body C-body))]
+        
+      [(app? s)
+        ; assume that X-fun and X-arg do not share elements
+        ; TODO add an assertion
+        (let*-values ([(t-fun X-fun C-fun) (gather-constraints-s (app-fn s) G X C)]
+                      [(t-arg X-arg C-arg) (gather-constraints-s (app-arg s) G X C)]
+                      [(t-app) (type-var (typechecker-fresh-type-var))])
+          (values t-app
+                  (set-union X-fun X-arg)
+                  (append (list (constraint t-fun (fun t-arg t-app))) C-fun C-arg)))]
+
+      [(succ? s)
+       (let-values ([(t-n X-n C-n) (gather-constraints-s (succ-n s) G X C)])
+         (values (int) 
+                 X-n 
+                 (append (list (constraint t-n (int))) C-n)))]
+
+      [(pred? s) 
+       (let-values ([(t-n X-n C-n) (gather-constraints-s (pred-n s) G X C)])
+         (values (int) 
+                 X-n 
+                 (append (list (constraint t-n (int))) C-n)))]
+
+      [(iszero? s)
+       (let-values ([(t-n X-n C-n) (gather-constraints-s (iszero-n s) G X C)])
+           (values (bool) 
+                   X-n 
+                   (append (list (constraint t-n (int))) C-n)))]
+
+      [(if-conditional? s) 
+       (let-values ([(t-cond X-cond C-cond) (gather-constraints-s (if-conditional-cond s) G X C)]
+                    [(t-then X-then C-then) (gather-constraints-s (if-conditional-then s) G X C)]
+                    [(t-else X-else C-else) (gather-constraints-s (if-conditional-else s) G X C)])
+           (values t-then
+                   (set-union X-cond X-then X-else) 
+                   (append (list (constraint t-cond (bool))
+                                 (constraint t-then t-else)) 
+                           (set-union C-cond C-then C-else))))]
+
+      [(primitive-val? s) (values (primitive-type s) X C)]))
 (gather-constraints-s p '() (set) '()))
 
 ;; (listof constraint) (setof sexpr) -> (dictof sexpr type)
@@ -122,7 +169,7 @@
 ;; type mapping -> type
 ;; applies mapping of (type var -> type) for the given type
 (define (substitute-inferred-types t sigma)
-  (cond [(bool? t) t]
+  (cond [(or (bool? t) (int? t)) t]
         [(fun? t)  (fun (substitute-inferred-types (fun-param t) sigma)
                         (substitute-inferred-types (fun-body t) sigma))]
         [(type-var? t) 
@@ -143,16 +190,21 @@
   ;; Tests
 (define typecheck-tests
   (test-suite "typechecker tests for SLTLC"
-    (check-equal? (typecheck val-true) (bool) "true")
-    (check-equal? (typecheck val-false) (bool) "false")
-    (check-match (typecheck val-fn-identity) (fun t t) (type-var? t))
-    (check-equal? (typecheck term-app-identity) (bool) "app identity")
-    (check-match (typecheck val-fn-double) (fun (fun t t) (fun t t)) (type-var? t))
-    (check-match (typecheck val-22-5-5) 
+    (check-equal? (typecheck ast-val-true) (bool) "true")
+    (check-equal? (typecheck ast-val-false) (bool) "false")
+    (check-match (typecheck ast-val-fn-identity) (fun t t) (type-var? t))
+    (check-equal? (typecheck ast-term-app-identity) (bool) "app identity")
+    (check-match (typecheck ast-val-fn-double) (fun (fun t t) (fun t t)) (type-var? t))
+    (check-match (typecheck ast-val-22-5-5) 
                  (fun (fun t1 t2)
                    (fun (fun (bool) t1) t2))
                  (and (type-var? t1) (type-var? t2) (unique? (list t1 t2))))
-    (check-equal? (typecheck term-app-double) (bool) "app double")
+    (check-equal? (typecheck ast-term-app-double) (bool) "app double")
+    (check-equal? (typecheck ast-val-zero) (int) "zero")
+    (check-equal? (typecheck ast-term-succ) (int) "succ")
+    (check-equal? (typecheck ast-term-pred) (int) "pred")
+    (check-equal? (typecheck ast-term-iszero) (bool) "iszero")
+    (check-equal? (typecheck ast-term-if) (int) "if")
   ))
 
-(run-tests typecheck-tests)
+; (run-tests typecheck-tests)

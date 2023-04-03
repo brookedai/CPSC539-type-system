@@ -21,6 +21,13 @@
        (make-constructor-style-printer
         (lambda (obj) 'type:bool)
         (lambda (obj) (list))))])
+(struct int type ()
+  #:transparent
+  #:methods gen:custom-write
+     [(define write-proc
+       (make-constructor-style-printer
+        (lambda (obj) 'type:int)
+        (lambda (obj) (list))))])
 (struct fun type (param body)
   #:transparent
   #:methods gen:custom-write
@@ -45,4 +52,4 @@
 
 ;; Helpers
 (define (primitive-val? v)
-  (boolean? v))
+  (or (boolean? v) (integer? v)))

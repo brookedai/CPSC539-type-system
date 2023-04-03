@@ -12,12 +12,18 @@ Surface syntax
 t ::=                   terms:
   x                     variable
   (lambda x . t)        abstraction
-  (t t)                 application
+  (app t t)             application
+  (succ t)              successor
+  (pred t)              predecessor
+  (iszero t)            is zero
+  (if t then t else t)  conditional
 v ::=                   values:
   true | false          boolean constants
+  0, -1, 1, ...         integer constants
   (lambda x . t)        abstraction value
 T ::=                   types:
   Bool                  boolean
+  Int                   integer
   T -> T                type of functions
 
 Context
@@ -26,27 +32,21 @@ G ::=                   contexts:
   (dict-set G x T)      term variable binding
 |#
 
-;; Program examples
-(define val-true 'true)
-(define val-false 'false)
-(define val-fn-identity '(lambda x Bool x))
-(define term-app-identity `(,val-fn-identity ,val-false))
-(define val-fn-double '(lambda f (Bool -> Bool) (lambda x Bool (f (f x)))))
-
-;; Context examples
-(define empty-gamma #hash())
-(define gamma-1 '((x . Bool)))
-
-(define (run-tests)
+(define (test)
   (run-tests parse-tests)
   (run-tests typecheck-tests))
 
 (define (main)
-  (println (typecheck (parse val-true)))
-  (println (typecheck (parse val-false)))
-  (println (typecheck (parse val-fn-identity)))
-  (println (typecheck (parse term-app-identity)))
-  (println (typecheck (parse val-fn-double)))
+  (println (typecheck (parse sltlc-val-true)))
+  (println (typecheck (parse sltlc-val-false)))
+  (println (typecheck (parse sltlc-val-fn-identity)))
+  (println (typecheck (parse sltlc-term-app-identity)))
+  (println (typecheck (parse sltlc-val-fn-double)))
+  (println (typecheck (parse sltlc-val-22-5-5)))
+  (println (typecheck (parse sltlc-val-zero)))
+  (println (typecheck (parse sltlc-term-succ)))
+  (println (typecheck (parse sltlc-term-pred)))
 )
 
 (main)
+(test)
