@@ -12,30 +12,30 @@
   #:methods gen:custom-write - so that struct prints nicely.
 |#
 
-(struct type ()
+(struct sltlc-type ()
   #:transparent)
-(struct bool type ()
+(struct bool sltlc-type ()
   #:transparent
   #:methods gen:custom-write
      [(define write-proc
        (make-constructor-style-printer
         (lambda (obj) 'type:bool)
         (lambda (obj) (list))))])
-(struct int type ()
+(struct int sltlc-type ()
   #:transparent
   #:methods gen:custom-write
      [(define write-proc
        (make-constructor-style-printer
         (lambda (obj) 'type:int)
         (lambda (obj) (list))))])
-(struct fun type (param body)
+(struct fun sltlc-type (param body)
   #:transparent
   #:methods gen:custom-write
      [(define write-proc
        (make-constructor-style-printer
         (lambda (obj) 'type:fun)
         (lambda (obj) (list (fun-param obj) (fun-body obj)))))])
-(struct type-var type (name)
+(struct type-var sltlc-type (name)
   #:transparent
   #:methods gen:custom-write
      [(define write-proc
