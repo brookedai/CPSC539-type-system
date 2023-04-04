@@ -25,13 +25,56 @@ lop        ::= &&, ||                      logic operators
 aop        ::= +, -                        arithmetic operators
 
 |#
-(struct predicate ())
-(struct var predicate (name))
-(struct ineqop predicate (iop e1 e2))
-(struct logicop predicate (lop p1 p2))
-(struct arithop (aop e1 e2))
-(struct not (p))
-(struct if (cond then else))
+(struct predicate () #:transparent)
+(struct var predicate (name)
+  #:transparent
+  #:methods gen:custom-write
+     [(define write-proc
+       (make-constructor-style-printer
+        (lambda (obj) 'var)
+        (lambda (obj) (list (var-name obj)))))])
+(struct ineqop predicate (iop e1 e2)
+  #:transparent
+  #:methods gen:custom-write
+     [(define write-proc
+       (make-constructor-style-printer
+        (lambda (obj) 'ineqop)
+        (lambda (obj) (list (ineqop-iop obj) (ineqop-e1 obj) (ineqop-e2 obj)))))])
+(struct logicop predicate (lop p1 p2)
+  #:transparent
+  #:methods gen:custom-write
+     [(define write-proc
+       (make-constructor-style-printer
+        (lambda (obj) 'logicop)
+        (lambda (obj) (list (logicop-lop obj) (logicop-p1 obj) (logicop-p2 obj)))))])
+(struct arithop (aop e1 e2)
+  #:transparent
+  #:methods gen:custom-write
+     [(define write-proc
+       (make-constructor-style-printer
+        (lambda (obj) 'lt:arithop)
+        (lambda (obj) (list (arithop-aop obj) (arithop-e1 obj) (arithop-e2 obj)))))])
+(struct not (p)
+  #:transparent
+  #:methods gen:custom-write
+     [(define write-proc
+       (make-constructor-style-printer
+        (lambda (obj) 'lt:var)
+        (lambda (obj) (list (var-name obj)))))])
+(struct if (cond then else)
+  #:transparent
+  #:methods gen:custom-write
+     [(define write-proc
+       (make-constructor-style-printer
+        (lambda (obj) 'lt:if)
+        (lambda (obj) (list (if-cond obj) (if-then obj) (if-else obj)))))])
+(struct value-var () 
+  #:transparent
+  #:methods gen:custom-write
+     [(define write-proc
+       (make-constructor-style-printer
+        (lambda (obj) 'lt:value-var)
+        (lambda (obj) (list))))]) ; represents v, the special value variable
 
 ;; Templates
 ; (define (fn-for-expr p)
@@ -51,7 +94,7 @@ aop        ::= +, -                        arithmetic operators
 ;         [(logicop? p) (... (logicop-lop p)
 ;                              (fn-for-predicate (logicop-p1 p))
 ;                              (fn-for-predicate (logicop-p2 p)))]
-;         [(not? p) (... (not-p p))]
+;         [(not? p) (... (fn-for-predicate (not-p p)))]
 ;         [(if? p) (... (fn-for-predicate (if-cond p))
 ;                         (fn-for-predicate (if-then p))
 ;                         (fn-for-predicate (if-else p)))]))
@@ -59,9 +102,28 @@ aop        ::= +, -                        arithmetic operators
 #|
   SLTLC REFINEMENT TYPE
 |#
-(struct liquid-type ())
-(struct ref-type liquid-type (base predicates))
-(struct ref-type-var liquid-type (base predicates))
+(struct liquid-type () #:transparent)
+(struct ref-type liquid-type (base predicate)
+  #:transparent
+  #:methods gen:custom-write
+     [(define write-proc
+       (make-constructor-style-printer
+        (lambda (obj) 'lt:ref-type)
+        (lambda (obj) (list (ref-type-base obj) (ref-type-predicate obj)))))])
+(struct ref-fun-type liquid-type (param body)
+  #:transparent
+  #:methods gen:custom-write
+     [(define write-proc
+       (make-constructor-style-printer
+        (lambda (obj) 'lt:ref-fun-type)
+        (lambda (obj) (list (ref-fun-type-param obj) (ref-fun-type-body obj)))))])
+(struct ref-type-var liquid-type (name)
+  #:transparent
+  #:methods gen:custom-write
+     [(define write-proc
+       (make-constructor-style-printer
+        (lambda (obj) 'lt:ref-type-var)
+        (lambda (obj) (list (ref-type-var-name obj)))))])
 
 ;; Templates
 ; (define (fn-for-lop lop)

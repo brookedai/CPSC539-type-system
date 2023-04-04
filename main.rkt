@@ -11,7 +11,7 @@ SIMPLE LIQUID-TYPED LAMBDA CALCULUS (SLTLC)
 Surface syntax
 t ::=                   terms:
   x                     variable
-  (lambda x . t)        abstraction
+  (lambda x T t)        abstraction
   (app t t)             application
   (succ t)              successor
   (pred t)              predecessor
@@ -19,12 +19,44 @@ t ::=                   terms:
   (if t then t else t)  conditional
 v ::=                   values:
   true | false          boolean constants
-  0, -1, 1, ...         integer constants
-  (lambda x . t)        abstraction value
-T ::=                   types:
+  n                     integer constants
+  (lambda x T t)        abstraction value
+T(B) ::=                types:
+  auto                  infer type
+  (B p)                 liquid type
+  (T(B) -> T(B))        type of functions; disallow auto for function type
+B ::=                   base types:
   Bool                  boolean
   Int                   integer
-  T -> T                type of functions
+
+Predicates
+p ::=                   liquid predicates:
+  q                     predicate
+  k                     liquid type variable
+q ::=                   predicates:
+  x                     variable
+  true | false          boolean constants
+  (iop expr expr)       inequalities
+  (lop q q)             logic operations
+iop ::=                 inequality operations:
+  <
+  <=
+  ==
+  >=
+  >
+  !=
+lop ::=                 logic operations:
+  and
+  or
+expr ::=
+  (aop expr expr)       arithmetic
+  n                     integer numbers
+  x                     variable
+aop ::=
+  +
+  -
+n   ::=                 integer numbers:
+  0, -1, 1, ...
 
 Context
 G ::=                   contexts:
