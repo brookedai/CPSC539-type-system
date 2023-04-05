@@ -39,6 +39,7 @@
 (define sltlc-term-if '(if true then 1 else 0))
 (define sltlc-val-div-0 '(lambda x (Int true) (lambda y (Int (!= x 0)) (/ x y))))
 (define sltlc-term-div-0-error `(app (app ,sltlc-val-div-0 1) 0))
+(define sltlc-term-wrong-type-error `(succ true))
 
 ;; Helpers
 (define (parser-fresh-type-var)
@@ -200,6 +201,8 @@
                             (binop '/ (id 'x) (id 'y))))
                        1)
                     0))
+    (check-equal? (parse sltlc-term-wrong-type-error)
+                  (succ #t) "wrong type")
   ))
 
 ; (run-tests parse-tests)

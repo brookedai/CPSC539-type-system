@@ -53,6 +53,7 @@
             (binop '/ (id 'x) (id 'y))))
         1)
     0))
+(define ast-term-wrong-type-error (succ #t))
 
 ;; Helpers
 (define (primitive-type v)
@@ -296,7 +297,7 @@
                                 (lt:ref-type (t:int) #t))) 
                   "lam div 0")
     (check-equal? (typecheck ast-term-div-0-error) (unrefined (t:int)) "app div 0 error")
+    (check-exn exn:fail? (lambda () (typecheck ast-term-wrong-type-error)))
   ))
 
-(run-tests typecheck-tests)
-; (typecheck ast-term-app-double)
+; (run-tests typecheck-tests)

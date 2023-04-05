@@ -15,8 +15,8 @@ t ::=                   terms:
   (app t t)             application
   (succ t)              successor
   (pred t)              predecessor
-  (ineq iop t t)        inequality
-  (binop aop t t)       binary arithmetic
+  (iop t t)             inequality
+  (aop t t)             binary arithmetic
   (if t then t else t)  conditional
 v ::=                   values:
   true | false          boolean constants
@@ -32,7 +32,7 @@ Types
 T(B) ::=                types:
   auto                  infer type
   (B p)                 liquid type
-  (T(B) -> T(B))        type of functions; disallow auto for function type
+  (T(B) -> T(B))        type of functions
 B ::=                   base types:
   Bool                  boolean
   Int                   integer

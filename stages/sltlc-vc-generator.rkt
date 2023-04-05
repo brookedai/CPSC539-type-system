@@ -4,32 +4,6 @@
          (prefix-in lt: "../models/sltlc-liquid-types.rkt")
          "../models/sltlc-ast.rkt")
 
-; (define (generate-Q)
-;   (map (lambda (iop) (lt:ineqop iop (lt:value-var) 0))
-;        (list '< '<= '= '>= '> '!=)))
-; (generate-Q)
-
-;; sltlc-ast -> sltlc-ast
-; (define (generate-predicates s)
-
-;   ;; sltlc-ast (mapof sexpr liquid-type) (setof guard predicates) -> 
-;   (define (generate-predicates-p e G-tb G-gp)
-;     (cond 
-;         [(id? s) (... s)]
-;         [(lam? s) (... (lam-param s)
-;                        (fn-for-type (lam-param-type s))
-;                        (fn-for-sltlc (lam-body s)))]
-;         [(app? s) (... (fn-for-sltlc (app-fn s))
-;                        (fn-for-sltlc (app-arg s)))]
-;         [(succ? s) (... (succ-n s))]
-;         [(pred? s) (... (succ-n s))]
-;         [(iszero? s) (... (succ-n s))]
-;         [(if-conditional? s) (... (fn-for-sltlc (if-conditional-cond s))
-;                                   (fn-for-sltlc (if-conditional-then s))
-;                                   (fn-for-sltlc (if-conditional-else s)))]))
-
-;   (generate-predicates-p s '())
-
 ;; (listof predicate) -> (void)
 ;; calls rosette's `assert` for each of the given predicates
 ;; note: call (clear-vc!) after this to clear the assertions
