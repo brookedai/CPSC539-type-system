@@ -42,13 +42,20 @@
        (make-constructor-style-printer
         (lambda (obj) 'pred)
         (lambda (obj) (list (pred-n obj)))))])
-(struct iszero sltlc (n)
+(struct ineq sltlc (iop t1 t2)
   #:transparent
   #:methods gen:custom-write
      [(define write-proc
        (make-constructor-style-printer
-        (lambda (obj) 'iszero)
-        (lambda (obj) (list (iszero-n obj)))))])
+        (lambda (obj) 'ineq)
+        (lambda (obj) (list (ineq-iop obj) (ineq-t1 obj) (ineq-t2 obj)))))])
+(struct binop sltlc (aop t1 t2)
+  #:transparent
+  #:methods gen:custom-write
+     [(define write-proc
+       (make-constructor-style-printer
+        (lambda (obj) 'binop)
+        (lambda (obj) (list (binop-aop obj) (binop-t1 obj) (binop-t2 obj)))))])
 (struct if-conditional sltlc (cond then else)
   #:transparent
   #:methods gen:custom-write
@@ -64,8 +71,14 @@
 ;                        (fn-for-type (lam-param-type s))
 ;                        (fn-for-sltlc (lam-body s)))]
 ;         [(app? s) (... (fn-for-sltlc (app-fn s))
-;                        (fn-for-sltlc (app-arg s)))]))
+;                        (fn-for-sltlc (app-arg s)))]
+;         [(succ? s) (... (succ-n s))]
+;         [(pred? s) (... (succ-n s))]
+;         [(ineq? s) (... (ineq-iop s) 
+;                         (fn-for-sltlc (ineq-t1 s))
+;                         (fn-for-sltlc (ineq-t2 s)))]
+;         [(binop? s) (... (binop-aop s) (binop-t1 s) (binop-t2 s))]
+;         [(if-conditional? s) (... (fn-for-sltlc (if-conditional-cond s))
+;                                   (fn-for-sltlc (if-conditional-then s))
+;                                   (fn-for-sltlc (if-conditional-else s)))]))
 
-;; Examples
-(define x (id 'x))
-(define fn-identity (lam 'x (bool) (id 'x)))

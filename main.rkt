@@ -3,8 +3,8 @@
 (require racket
          rackunit
          rackunit/text-ui)
-(require "sltlc-parser.rkt"
-         "sltlc-typechecker.rkt")
+(require "stages/sltlc-parser.rkt"
+         "stages/sltlc-typechecker.rkt")
 
 #|
 SIMPLE LIQUID-TYPED LAMBDA CALCULUS (SLTLC)
@@ -15,12 +15,20 @@ t ::=                   terms:
   (app t t)             application
   (succ t)              successor
   (pred t)              predecessor
-  (iszero t)            is zero
+  (ineq iop t t)        inequality
+  (binop aop t t)       binary arithmetic
   (if t then t else t)  conditional
 v ::=                   values:
   true | false          boolean constants
   n                     integer constants
   (lambda x T t)        abstraction value
+aop ::=                 arithmetic operators:
+  +
+  -
+  *
+  /
+
+Types
 T(B) ::=                types:
   auto                  infer type
   (B p)                 liquid type
@@ -41,7 +49,7 @@ q ::=                   predicates:
 iop ::=                 inequality operations:
   <
   <=
-  ==
+  =
   >=
   >
   !=
@@ -49,10 +57,10 @@ lop ::=                 logic operations:
   and
   or
 expr ::=
-  (aop expr expr)       arithmetic
+  (laop expr expr)      linear arithmetic
   n                     integer numbers
   x                     variable
-aop ::=
+laop ::=                linear arithmetic operators:
   +
   -
 n   ::=                 integer numbers:
@@ -69,15 +77,20 @@ G ::=                   contexts:
   (run-tests typecheck-tests))
 
 (define (main)
-  (println (typecheck (parse sltlc-val-true)))
-  (println (typecheck (parse sltlc-val-false)))
-  (println (typecheck (parse sltlc-val-fn-identity)))
-  (println (typecheck (parse sltlc-term-app-identity)))
-  (println (typecheck (parse sltlc-val-fn-double)))
-  (println (typecheck (parse sltlc-val-22-5-5)))
-  (println (typecheck (parse sltlc-val-zero)))
-  (println (typecheck (parse sltlc-term-succ)))
-  (println (typecheck (parse sltlc-term-pred)))
+  (pretty-print (typecheck (parse sltlc-val-true)))
+  (pretty-print (typecheck (parse sltlc-val-false)))
+  (pretty-print (typecheck (parse sltlc-val-fn-identity)))
+  (pretty-print (typecheck (parse sltlc-term-app-identity)))
+  (pretty-print (typecheck (parse sltlc-val-fn-double)))
+  (pretty-print (typecheck (parse sltlc-val-22-5-5)))
+  (pretty-print (typecheck (parse sltlc-val-zero)))
+  (pretty-print (typecheck (parse sltlc-term-succ)))
+  (pretty-print (typecheck (parse sltlc-term-pred)))
+  (pretty-print (typecheck (parse sltlc-term-ineq)))
+  (pretty-print (typecheck (parse sltlc-term-binop)))
+  (pretty-print (typecheck (parse sltlc-term-if)))
+  (pretty-print (typecheck (parse sltlc-val-div-0)))
+  (pretty-print (typecheck (parse sltlc-term-div-0-error)))
 )
 
 (main)

@@ -3,10 +3,10 @@
 (require racket
          rackunit
          rackunit/text-ui)
-(require "sltlc-ast.rkt"
-         (prefix-in t: "sltlc-types.rkt")
-         (prefix-in lt: "sltlc-liquid-types.rkt")
-         "util.rkt")
+(require "../models/sltlc-ast.rkt"
+         (prefix-in t: "../models/sltlc-types.rkt")
+         (prefix-in lt: "../models/sltlc-liquid-types.rkt")
+         "../util.rkt")
 (provide parse
          parse-tests
          sltlc-val-true
@@ -17,7 +17,12 @@
          sltlc-val-22-5-5
          sltlc-val-zero
          sltlc-term-succ
-         sltlc-term-pred)
+         sltlc-term-pred
+         sltlc-term-ineq
+         sltlc-term-binop
+         sltlc-term-if
+         sltlc-val-div-0
+         sltlc-term-div-0-error)
 
 ;; Program examples
 (define sltlc-val-true 'true)
@@ -29,8 +34,11 @@
 (define sltlc-val-zero '0)
 (define sltlc-term-succ '(succ 0))
 (define sltlc-term-pred '(pred 0))
-(define sltlc-term-iszero '(iszero 0))
+(define sltlc-term-ineq '(= 1 2))
+(define sltlc-term-binop '(+ 1 2))
 (define sltlc-term-if '(if true then 1 else 0))
+(define sltlc-val-div-0 '(lambda x (Int true) (lambda y (Int (!= x 0)) (/ x y))))
+(define sltlc-term-div-0-error `(app (app ,sltlc-val-div-0 1) 0))
 
 ;; Helpers
 (define (parser-fresh-type-var)
@@ -43,10 +51,12 @@
 ;; given a term t, return the AST of t if well-formed
 ;; otherwise, throw an error
 (define (parse t)
-  (define iops '(< <= == >= > !=))
-  (define aops '(+ -))
+  (define iops '(< <= = >= > !=))
+  (define laops '(+ -))
+  (define aops '(+ - * /))
   (define lops '(and or))
   (define (iop? o) (member o iops))
+  (define (laop? o) (member o laops))
   (define (aop? o) (member o aops))
   (define (lop? o) (member o lops))
   
@@ -65,10 +75,10 @@
   
   (define (parse-expr e)
     (match e
-      [`(,aop ,e1 ,e2) #:when (aop? aop)
-       (lt:arithop aop (parse-expr e1) (parse-expr e2))]
+      [`(,laop ,e1 ,e2) #:when (laop? laop)
+       (lt:arithop laop (parse-expr e1) (parse-expr e2))]
       [n #:when (integer? n) n]
-      [x (lt:var x)]))
+      [x (id x)]))
 
   (define (parse-q q)
     (match q
@@ -104,8 +114,8 @@
       [`(,B ,p) (lt:ref-type (parse-type B)
                           (parse-p p))]
 
-      [`(,T1 -> ,T2) (lt:ref-fun-type (parse-lt T1)
-                                   (parse-lt T2))]
+      [`(,T1 -> ,T2) (t:fun (parse-lt T1)
+                            (parse-lt T2))]
       
       [_ (error 'parse-lt "invalid liquid type: ~a" lt)]))
 
@@ -132,7 +142,11 @@
 
       [`(pred ,t1) (pred (parse-t t1))]
       
-      [`(iszero ,t1) (iszero (parse-t t1))]
+      [`(,iop ,t1 ,t2) #:when (iop? iop)
+       (ineq iop (parse-t t1) (parse-t t2))]
+
+      [`(,aop ,t1 ,t2) #:when (aop? aop)
+       (binop aop (parse-t t1) (parse-t t2))]
 
       [`(if ,condition then ,then-b else ,else-b) 
        (if-conditional (parse-t condition) (parse-t then-b) (parse-t else-b))]
@@ -155,7 +169,7 @@
                  (app (lam 'x (lt:ref-type tv ltv) (id 'x)) #f) 
                  (and (t:type-var? tv) (lt:ref-type-var? ltv)))
     (check-match (parse sltlc-val-fn-double) 
-                 (lam 'f (lt:ref-fun-type lt1 lt2)
+                 (lam 'f (t:fun lt1 lt2)
                    (lam 'x (lt:ref-type tv ltv) 
                      (app (id 'f) 
                        (app (id 'f) (id 'x))))) 
@@ -167,18 +181,25 @@
                  (lam 'z lt1 
                    (lam 'y lt2 
                      (app (id 'z) (app (id 'y) #t))))
-                 (and (lt:ref-fun-type? lt1) 
-                      (lt:ref-fun-type? lt2)))
+                 (and (t:fun? lt1) 
+                      (t:fun? lt2)))
     (check-equal? (parse sltlc-val-zero) 0 "zero")
     (check-equal? (parse sltlc-term-succ) (succ 0) "succ")
     (check-equal? (parse sltlc-term-pred) (pred 0) "pred")
-    (check-equal? (parse sltlc-term-iszero) (iszero 0) "iszero")
+    (check-equal? (parse sltlc-term-ineq) (ineq '= 1 2) "ineq")
+    (check-equal? (parse sltlc-term-binop) (binop '+ 1 2) "binop")
     (check-equal? (parse sltlc-term-if) (if-conditional #t 1 0) "if")
+    (check-equal? (parse sltlc-val-div-0) 
+                  (lam 'x (lt:ref-type (t:int) #t)
+                    (lam 'y (lt:ref-type (t:int) (lt:ineqop '!= (id 'x) 0))
+                         (binop '/ (id 'x) (id 'y)))))
+    (check-equal? (parse sltlc-term-div-0-error) 
+                  (app
+                    (app (lam 'x (lt:ref-type (t:int) #t)
+                        (lam 'y (lt:ref-type (t:int) (lt:ineqop '!= (id 'x) 0))
+                            (binop '/ (id 'x) (id 'y))))
+                       1)
+                    0))
   ))
 
 ; (run-tests parse-tests)
-
-(parse sltlc-val-fn-identity)
-(parse sltlc-term-app-identity)
-(parse sltlc-val-fn-double)
-(parse sltlc-val-22-5-5)

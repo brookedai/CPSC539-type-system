@@ -10,3 +10,4 @@
 (define (fresh-type-var base-name)
   (set! type-var-counter (+ type-var-counter 1))
   (string->symbol (format "~a~a" base-name type-var-counter)))
+  

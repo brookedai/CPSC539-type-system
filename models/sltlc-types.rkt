@@ -28,7 +28,8 @@
        (make-constructor-style-printer
         (lambda (obj) 't:int)
         (lambda (obj) (list))))])
-(struct fun sltlc-type (param body)
+; count this as a liquid type, TODO
+(struct fun sltlc-type (param body) ; param, body are liquid types
   #:transparent
   #:methods gen:custom-write
      [(define write-proc

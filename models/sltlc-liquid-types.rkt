@@ -26,26 +26,19 @@ aop        ::= +, -                        arithmetic operators
 
 |#
 (struct predicate () #:transparent)
-(struct var predicate (name)
-  #:transparent
-  #:methods gen:custom-write
-     [(define write-proc
-       (make-constructor-style-printer
-        (lambda (obj) 'var)
-        (lambda (obj) (list (var-name obj)))))])
 (struct ineqop predicate (iop e1 e2)
   #:transparent
   #:methods gen:custom-write
      [(define write-proc
        (make-constructor-style-printer
-        (lambda (obj) 'ineqop)
+        (lambda (obj) 'lt:ineqop)
         (lambda (obj) (list (ineqop-iop obj) (ineqop-e1 obj) (ineqop-e2 obj)))))])
 (struct logicop predicate (lop p1 p2)
   #:transparent
   #:methods gen:custom-write
      [(define write-proc
        (make-constructor-style-printer
-        (lambda (obj) 'logicop)
+        (lambda (obj) 'lt:logicop)
         (lambda (obj) (list (logicop-lop obj) (logicop-p1 obj) (logicop-p2 obj)))))])
 (struct arithop (aop e1 e2)
   #:transparent
@@ -59,8 +52,8 @@ aop        ::= +, -                        arithmetic operators
   #:methods gen:custom-write
      [(define write-proc
        (make-constructor-style-printer
-        (lambda (obj) 'lt:var)
-        (lambda (obj) (list (var-name obj)))))])
+        (lambda (obj) 'lt:not)
+        (lambda (obj) (list (not-p obj)))))])
 (struct if (cond then else)
   #:transparent
   #:methods gen:custom-write
@@ -75,6 +68,13 @@ aop        ::= +, -                        arithmetic operators
        (make-constructor-style-printer
         (lambda (obj) 'lt:value-var)
         (lambda (obj) (list))))]) ; represents v, the special value variable
+(struct placeholder-var () 
+  #:transparent
+  #:methods gen:custom-write
+     [(define write-proc
+       (make-constructor-style-printer
+        (lambda (obj) 'lt:placeholder-var)
+        (lambda (obj) (list))))]) ; represents the star placeholder variable
 
 ;; Templates
 ; (define (fn-for-expr p)
@@ -110,13 +110,6 @@ aop        ::= +, -                        arithmetic operators
        (make-constructor-style-printer
         (lambda (obj) 'lt:ref-type)
         (lambda (obj) (list (ref-type-base obj) (ref-type-predicate obj)))))])
-(struct ref-fun-type liquid-type (param body)
-  #:transparent
-  #:methods gen:custom-write
-     [(define write-proc
-       (make-constructor-style-printer
-        (lambda (obj) 'lt:ref-fun-type)
-        (lambda (obj) (list (ref-fun-type-param obj) (ref-fun-type-body obj)))))])
 (struct ref-type-var liquid-type (name)
   #:transparent
   #:methods gen:custom-write
