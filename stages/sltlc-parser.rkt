@@ -22,7 +22,9 @@
          sltlc-term-binop
          sltlc-term-if
          sltlc-val-div-0
-         sltlc-term-div-0-error)
+         sltlc-term-div-0-error
+         sltlc-term-wrong-type-error
+         sltlc-term-wrong-type-2)
 
 ;; Program examples
 (define sltlc-val-true 'true)
@@ -40,6 +42,7 @@
 (define sltlc-val-div-0 '(lambda x (Int true) (lambda y (Int (!= x 0)) (/ x y))))
 (define sltlc-term-div-0-error `(app (app ,sltlc-val-div-0 1) 0))
 (define sltlc-term-wrong-type-error `(succ true))
+(define sltlc-term-wrong-type-2 `(app (lambda x auto (succ x)) true))
 
 ;; Helpers
 (define (parser-fresh-type-var)
@@ -203,6 +206,8 @@
                     0))
     (check-equal? (parse sltlc-term-wrong-type-error)
                   (succ #t) "wrong type")
+    (check-equal? (parse sltlc-term-wrong-type-2)
+                  (app (lam 'x (lt:ref-type (t:type-var 'T19) (lt:ref-type-var 'K20)) (succ (id 'x))) #t) "wrong type app")
   ))
 
 ; (run-tests parse-tests)

@@ -54,6 +54,11 @@
         1)
     0))
 (define ast-term-wrong-type-error (succ #t))
+(define ast-term-wrong-type-2 
+  (app
+    (lam 'x (lt:ref-type (t:type-var 'T19) (lt:ref-type-var 'K20)) 
+      (succ (id 'x)))
+   #t))
 
 ;; Helpers
 (define (primitive-type v)
@@ -298,6 +303,7 @@
                   "lam div 0")
     (check-equal? (typecheck ast-term-div-0-error) (unrefined (t:int)) "app div 0 error")
     (check-exn exn:fail? (lambda () (typecheck ast-term-wrong-type-error)))
+    (check-exn exn:fail? (lambda () (typecheck ast-term-wrong-type-2)))
   ))
 
 ; (run-tests typecheck-tests)

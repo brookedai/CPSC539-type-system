@@ -91,7 +91,17 @@ G ::=                   contexts:
   (pretty-print (typecheck (parse sltlc-term-if)))
   (pretty-print (typecheck (parse sltlc-val-div-0)))
   (pretty-print (typecheck (parse sltlc-term-div-0-error)))
+  (pretty-print (typecheck (parse sltlc-term-wrong-type-error)))
+  (pretty-print (typecheck (parse sltlc-term-wrong-type-2)))
 )
 
-(main)
-(test)
+; (main)
+; (test)
+
+; referencing https://stackoverflow.com/questions/8119949/best-way-to-do-input-with-racket
+(let loop ()
+    (display "> ")
+    (define a (read (current-input-port)))
+    (with-handlers ([exn? (lambda (e) (display (format "~a\n" e)))])
+      (pretty-print (typecheck (parse a))))
+    (loop))
